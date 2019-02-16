@@ -39,7 +39,8 @@ router.post('/register', (req, res) => {
       }
       const newUser = new User({
         email: req.body.email,
-        password: req.body.password
+        password: req.body.password,
+        isVerified: false,
       });
 
       bcrypt.hash(newUser.password, 10, (err, hash) => {
@@ -99,8 +100,13 @@ router.post('/login', (req, res) => {
     .then(user => {
       if (!user) {
         return res.status(404).json({
-          error: 'Invalid email'
+          error: 'Email not found'
         });
+      }
+      if (user.isVerified === false) {
+        return res.status(400).json({
+          error: 'Email requires verification'
+        })
       }
 
       bcrypt.compare(password, user.password)
@@ -130,7 +136,6 @@ router.post('/login', (req, res) => {
 router.get('/current', passport.authenticate('jwt', {
   session: false
 }), (req, res) => {
-  console.log(req.user);
   res.json({
     id: req.user.id,
     email: req.user.email
