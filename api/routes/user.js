@@ -54,7 +54,6 @@ router.post('/register', (req, res) => {
 
               newToken.save()
                       .then(token => {
-                        // const url = `http://${req.headers.host}/api/users/activate/${token.token}`;
                         const msg = {
                           to: req.body.email,
                           from: {
@@ -145,9 +144,5 @@ router.get('/activate/:token', (req,res) => {
         })
         .catch(err => console.error(err));
 });
-
-router.post('/resend', (req,res) => {
-  
-})
 
 module.exports = router;
