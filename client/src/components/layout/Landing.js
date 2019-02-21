@@ -12,6 +12,9 @@ class App extends Component {
         <Button variant="outlined" component={Link} to="/login">
           Login
         </Button>
+        <Button variant="outlined" component={Link} to="/chat">
+          Chat
+        </Button>
       </div>
     );
   }

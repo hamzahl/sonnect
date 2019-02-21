@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types'; 
+import { withRouter } from 'react-router-dom';
 import { Button, TextField } from '@material-ui/core';
 import axios from 'axios';
+import { connect } from 'react-redux'
+import { registerUser } from '../../state/actions/authAction'
 
 class Register extends Component {
   constructor(){
@@ -9,7 +13,12 @@ class Register extends Component {
       email: '',
       password: '',
       password2: '',
-      errors: {}
+    }
+  }
+
+  componentWillReceiveProps = (nextProps) => {
+    if (nextProps.errors) {
+      this.setState({errors: nextProps.errors});
     }
   }
   
@@ -25,16 +34,25 @@ class Register extends Component {
       password: this.state.password,
       password2: this.state.password2,
     }
-    
-    axios.post('/api/users/register', newUser)
-          .then(res => console.log(res.data))
-          .catch(err => console.log(err));
+
+    this.props.registerUser(newUser, this.props.history);
   }
 
   render() {
+    const { errors } = this.state;
+
     return (
-      <form onSubmit={this.onSubmit}>
+      <form onSubmit={this.onSubmit} noValidate>
         <TextField
+          required 
+          error={ 
+            (this.state.email.endsWith('.ac.uk') || 
+              this.state.email.endsWith('.edu'))
+            ? false : true }
+          helperText={ (this.state.email.endsWith('.ac.uk') || 
+              this.state.email.endsWith('.edu') || 
+              this.state.email === '')
+            ? '' : 'University email must be entered' }
           label="Email"
           type="email"
           name="email"
@@ -44,6 +62,9 @@ class Register extends Component {
           value={this.state.email}
         />
         <TextField
+          required
+          error={false}
+          helperText={''}
           label="Password"
           type="password"
           name="password"
@@ -52,6 +73,11 @@ class Register extends Component {
           value={this.state.password}
         />
         <TextField
+          error={this.state.password !== this.state.password2
+                  ? true : false}
+          disabled={this.state.password === ''}
+          helperText={this.state.password !== this.state.password2
+                  ? 'Passwords must match' : ''}
           required
           label="Confirm Password"
           type="password"
@@ -70,4 +96,15 @@ class Register extends Component {
   }
 }
 
-export default Register;
+Register.propTypes = {
+  registerUser: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired
+}
+
+const mapStateToProps = (state) => ({
+  auth: state.auth,
+  errors: state.errors
+});
+
+export default connect(mapStateToProps, { registerUser })(withRouter(Register));

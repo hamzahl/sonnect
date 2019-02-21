@@ -1,4 +1,9 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types'; 
+import { withRouter } from 'react-router-dom';
+import axios from 'axios';
+import { connect } from 'react-redux'
+import { loginUser } from '../../state/actions/authAction'
 import { Button, TextField } from '@material-ui/core';
 
 class Login extends Component {
@@ -11,6 +16,16 @@ class Login extends Component {
     }
   }
 
+  componentWillReceiveProps = (nextProps) => {
+    if (nextProps.auth.isAuthenticated) {
+      this.props.history.push('/dashboard');
+    }
+
+    if (nextProps.errors) {
+      this.setState({errors: nextProps.errors});
+    }
+  }
+
   onChange = (e) => {
     this.setState({ [e.target.name]: e.target.value })
   }
@@ -18,16 +33,17 @@ class Login extends Component {
   onSubmit = (e) => {
     e.preventDefault();
 
-    const newUser = {
+    const userCredentials = {
       email: this.state.email,
       password: this.state.password,
     }
-    console.log(newUser);
+    this.props.loginUser(userCredentials);
   }
 
 
 
   render() {
+    const { errors } = this.state;
     return (
       <form onSubmit={this.onSubmit}>
         <TextField
@@ -59,4 +75,15 @@ class Login extends Component {
   }
 }
 
-export default Login
+Login.propTypes = {
+  loginUser: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired
+}
+
+const mapStateToProps = (state) => ({
+  auth: state.auth,
+  errors: state.errors
+});
+
+export default connect(mapStateToProps, { loginUser })(Login)
