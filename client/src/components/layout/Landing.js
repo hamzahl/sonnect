@@ -2,10 +2,11 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom'
 import Button from '@material-ui/core/Button';
 
-class App extends Component {
+class Landing extends Component {
   render() {
     return (
       <div className="auth-btns">
+       <h2>Welcome to Sonnect</h2>
         <Button variant="outlined" component={Link} to="/register">
           Register
         </Button>
@@ -20,4 +21,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default Landing;

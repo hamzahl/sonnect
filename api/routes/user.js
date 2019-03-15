@@ -81,30 +81,30 @@ router.post('/register', (req, res) => {
 
             
 
-            // newToken.save()
-            //   .then(token => {
-            //     const msg = {
-            //       to: req.body.email,
-            //       from: {
-            //         email: 'support@sonnect.com',
-            //         name: 'Sonnect'
-            //       },
-            //       subject: 'Email verification',
-            //       template_id: 'd-3f47d8e640e14bbaa1f79bbed948f058',
-            //       dynamic_template_data: {
-            //         verifyLink: `http://${req.headers.host}/api/users/activate/${token.token}`
-            //       }
+            newToken.save()
+              .then(token => {
+                const msg = {
+                  to: req.body.email,
+                  from: {
+                    email: 'support@sonnect.com',
+                    name: 'Sonnect'
+                  },
+                  subject: 'Email verification',
+                  template_id: 'd-3f47d8e640e14bbaa1f79bbed948f058',
+                  dynamic_template_data: {
+                    verifyLink: `http://${req.headers.host}/api/users/activate/${token.token}`
+                  }
 
-            //     };
-            //     sgMail.send(msg)
-            //       .then(() => {
-            //         console.log(`Activation email sent succesfully`)
-            //       })
-            //       .catch(err => {
-            //         console.error(err.toString());
-            //       });
-            //   })
-            //   .catch(err => console.error(err));
+                };
+                sgMail.send(msg)
+                  .then(() => {
+                    console.log(`Activation email sent succesfully`)
+                  })
+                  .catch(err => {
+                    console.error(err.toString());
+                  });
+              })
+              .catch(err => console.error(err));
 
             return res.status(200).json(user);
           })
