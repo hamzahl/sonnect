@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types'; 
-import { withRouter } from 'react-router-dom';
-import axios from 'axios';
 import { connect } from 'react-redux'
 import { loginUser } from '../../state/actions/authAction'
-import { Button, TextField } from '@material-ui/core';
+import TextFieldGroup from '../common/TextFieldGroup';
+
+
 
 class Login extends Component {
   constructor(){
@@ -45,32 +45,38 @@ class Login extends Component {
   render() {
     const { errors } = this.state;
     return (
-      <form onSubmit={this.onSubmit}>
-        <TextField
-          required
-          label="Email"
-          type="email"
-          name="email"
-          autoComplete="email"
-          margin="normal"
-          value={this.state.email}
-          onChange={this.onChange}
-        />
-        <TextField
-          required
-          label="Password"
-          type="password"
-          name="password"
-          margin="normal"
-          value={this.state.password}
-          onChange={this.onChange}
-        />
-        <Button 
-          type="submit"
-          variant="contained">
-          Submit
-        </Button>
-      </form>
+      <div className="login">
+              <div className="container">
+                <div className="row">
+                  <div className="col-md-8 m-auto">
+                    <h1 className="display-4 text-center">Log In</h1>
+                    <p className="lead text-center">
+                      We've been waiting for you...
+                    </p>
+                    <form onSubmit={this.onSubmit}>
+                      <TextFieldGroup
+                        placeholder="Email Address"
+                        name="email"
+                        type="email"
+                        value={this.state.email}
+                        onChange={this.onChange}
+                        error={errors.email}
+                      />
+
+                      <TextFieldGroup
+                        placeholder="Password"
+                        name="password"
+                        type="password"
+                        value={this.state.password}
+                        onChange={this.onChange}
+                        error={errors.password}
+                      />
+                      <input type="submit" className="btn btn-primary btn-block mt-4" />
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
     )
   }
 }

@@ -7,7 +7,11 @@ export const registerUser = (userData, history) => (dispatch) =>{
   axios
     .post('/api/users/register', userData)
     .then(res => history.push('/login'))
-    .catch(err => console.error(err))
+    .catch(err => 
+      dispatch({
+        type: GET_ERRORS,
+        payload: err.response.data
+      }))
 }
 
 export const loginUser = (userData) => (dispatch) =>{
@@ -39,4 +43,8 @@ export const logoutUser = () => dispatch => {
   localStorage.removeItem('jwtToken');
   setAuthToken(false);
   dispatch(setCurrentUser({}));
+}
+
+export const addFriend = (id) => dispatch => {
+  alert('Added' + id);
 }

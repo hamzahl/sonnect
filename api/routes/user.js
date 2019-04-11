@@ -7,6 +7,10 @@ const keys = require('../../config/keys');
 const crypto = require('crypto');
 const Chatkit = require ('@pusher/chatkit-server');
 
+// Load Input Validation
+const validateRegisterInput = require('../validation/register');
+const validateLoginInput = require('../validation/login');
+
 // Sendgrid
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(keys.sgApiKey);
@@ -35,17 +39,21 @@ router.get('/all', (req, res) => {
 
 // Route which creates a user in the DB if user doesn't already exist
 router.post('/register', (req, res) => {
-  User.findOne({
-      email: req.body.email
-    })
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  if(!isValid) {
+    return res.status(400).json(errors);
+  }
+
+  User.findOne( { email: req.body.email } )
     .then(user => {
       if (user) {
-        return res.status(500).json({
-          error: 'email already exists'
-        });
+        errors.email = 'Email already exists'
+        return res.status(500).json(errors);
       }
 
       const newUser = new User({
+        name: req.body.name,
         email: req.body.email,
         password: req.body.password,
         isVerified: false,
@@ -60,26 +68,24 @@ router.post('/register', (req, res) => {
         newUser
           .save()
           .then(user => {
-            chatkit
-              .createUser({
-                id: req.body.email,
-                name: req.body.name
-              })
-              .then(() => res.sendStatus(201))
-              .catch(err => {
-                if (err.error === 'services/chatkit/user_already_exists') {
-                  res.sendStatus(200);
-                } else {
-                  res.status(error.status).json(error)
-                }
-              })
+            // chatkit
+            //   .createUser({
+            //     id: req.body.email,
+            //     name: req.body.name
+            //   })
+            //   .then(() => res.sendStatus(201))
+            //   .catch(err => {
+            //     if (err.error === 'services/chatkit/user_already_exists') {
+            //       res.sendStatus(200);
+            //     } else {
+            //       res.status(error.status).json(error)
+            //     }
+            //   })
 
             const newToken = new Token({
               userId: user._id,
               token: crypto.randomBytes(16).toString('hex')
             });
-
-            
 
             newToken.save()
               .then(token => {
@@ -98,6 +104,7 @@ router.post('/register', (req, res) => {
                 };
                 sgMail.send(msg)
                   .then(() => {
+                    console.log(msg);
                     console.log(`Activation email sent succesfully`)
                   })
                   .catch(err => {
@@ -117,27 +124,30 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const { errors, isValid } = validateLoginInput(req.body);
 
-  User.findOne({
-      email
-    })
+  // Check Validation
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+
+  User.findOne( { email } )
     .then(user => {
       if (!user) {
-        return res.status(404).json({
-          error: 'Email not found'
-        });
+        errors.email = 'Email not found'
+        return res.status(404).json(errors);
       }
-      // if (user.isVerified === false) {
-      //   return res.status(400).json({
-      //     error: 'Email requires verification'
-      //   })
-      // }
+      if (user.isVerified === false) {
+        errors.email = 'Email requires verification. Please check junk folder.'
+        return res.status(400).json(errors);
+      }
 
       bcrypt.compare(password, user.password)
         .then(isMatch => {
           if (isMatch) {
             const payload = {
-              id: user.id
+              id: user.id,
+              name: user.name
             }
             jwt.sign(payload, keys.secretOrKey, {
               expiresIn: 3600
@@ -153,6 +163,9 @@ router.post('/login', (req, res) => {
             });
           }
         })
+        .catch(err =>{
+          return res.status(400).json(err);
+        })
     })
 })
 
@@ -160,12 +173,9 @@ router.post('/login', (req, res) => {
 router.get('/current', passport.authenticate('jwt', {session: false}), (req, res) => {  
   res.json({
     id: req.user.id,
+    name: req.user.name,
     email: req.user.email
   });
-})
-
-router.post('/current', passport.authenticate('jwt', {session: false}), (req, res) => {  
-  console.log('POSTED ' + req.query)
 })
 
 router.post('/chat', (req, res) => {
@@ -184,13 +194,13 @@ router.post('/chat', (req, res) => {
     })
 })
 
-router.get('/chat/authenticate', (req, res) => {
-  res.send('works');
-})
-
 router.post('/chat/authenticate', (req, res) => {
-  const authData = chatkit.authenticate({ userId: req.query.user_id});
-  res.status(authData.status).send(authData.body);
+  // const authData = chatkit.authenticate({ userId: req.query.user_id});
+  // res.status(authData.status).send(authData.body);
+      const authData = chatkit.authenticate({
+        userId: req.query.user_id,
+      });
+      res.status(authData.status).send(authData.body);
 })
 
 router.get('/activate/:token', (req, res) => {
